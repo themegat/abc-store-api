@@ -1,6 +1,7 @@
 
 using ABCStoreAPI.Configuration;
 using ABCStoreAPI.Database;
+using ABCStoreAPI.Repository;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,12 +9,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ApiConfig>(builder.Configuration.GetSection("ApiSettings"));
 
 builder.Services.AddHttpClient();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 builder.Services.AddControllers();
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
+builder.Services.AddScoped<ABCStoreAPI.Service.ExchangeRateService>();
 
 builder.Services.AddScoped<ABCStoreAPI.Service.ProductImportService>();
 builder.Services.AddScoped<ABCStoreAPI.Service.ExchangeRateImportService>();
@@ -63,7 +70,7 @@ void SeedData()
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<DataSeeder>>();   
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<DataSeeder>>();
     var seeders = new List<DataSeeder>
     {
         new ABCStoreAPI.Database.Seeder.FromCodeSeeder(dbContext, logger)
