@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Product> Product { get; set; }
     public DbSet<ProductCategory> ProductCategory { get; set; }
+    public DbSet<ProductImage> ProductImage { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,5 +22,11 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(p => p.ProductCategoryId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProductImage>()
+        .HasOne(pi => pi.Product)
+        .WithMany(p => p.ProductImages)
+        .HasForeignKey(pi => pi.ProductId)
+        .OnDelete(DeleteBehavior.Cascade);
     }
 }

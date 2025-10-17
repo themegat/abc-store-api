@@ -14,6 +14,9 @@ class DummyJsonProduct
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public string Category { get; set; } = string.Empty;
+
+    public string Thumbnail { get; set; } = string.Empty;
+    public List<string> Images { get; set; } = new List<string>();
 }
 
 class DummyJsonProducts
@@ -83,10 +86,37 @@ public class ProductImportService
         }
     }
 
+    private async Task PersistProductImages(string name, List<string> imageUrls)
+    {
+        var product = await _dbContext.Product.FirstOrDefaultAsync(p => p.Name == name);
+
+        if (product != null)
+        {
+            foreach (var imageUrl in imageUrls)
+            {
+
+                var productImage = new ProductImage()
+                {
+                    Url = imageUrl,
+                    ProductId = product.Id
+                };
+                productImage.CreatedAt = DateTime.UtcNow;
+                productImage.UpdatedAt = DateTime.UtcNow;
+                productImage.CreatedBy = SysUser;
+                productImage.UpdatedBy = SysUser;
+
+                _dbContext.ProductImage.Add(productImage);
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+    }
+
     private async Task ImportProductsAsync(DummyJsonProducts importProducts)
     {
         int newCount = 0;
         int duplicateCount = 0;
+        List<Tuple<string, List<string>>> productsToImages = new List<Tuple<String, List<string>>>();
 
         if (importProducts != null && importProducts.Products != null)
         {
@@ -97,7 +127,8 @@ public class ProductImportService
                     Name = product.Title,
                     Description = product.Description,
                     Price = product.Price,
-                    StockQuantity = product.Stock
+                    StockQuantity = product.Stock,
+                    ThumbnailUrl = product.Thumbnail
                 };
                 newProduct.CreatedAt = DateTime.UtcNow;
                 newProduct.UpdatedAt = DateTime.UtcNow;
@@ -112,6 +143,7 @@ public class ProductImportService
                 if (!await IsExistingProduct(newProduct.Name))
                 {
                     _dbContext.Product.Add(newProduct);
+                    productsToImages.Add(new Tuple<string, List<string>>(newProduct.Name, product.Images));
                     newCount++;
                 }
                 else
@@ -121,6 +153,11 @@ public class ProductImportService
             }
 
             await _dbContext.SaveChangesAsync();
+            foreach (var pi in productsToImages)
+            {
+                await PersistProductImages(pi.Item1, pi.Item2);
+            }
+
             _logger.LogInformation("Added {Count} products. Skipped {Skipped} duplicate products.", newCount, duplicateCount);
         }
     }
