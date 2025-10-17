@@ -27,6 +27,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+SeedData();
 LoadProducts();
 
 app.UseHttpsRedirection();
@@ -47,4 +48,20 @@ void LoadProducts()
     using var scope = app.Services.CreateScope();
     var productService = scope.ServiceProvider.GetRequiredService<ABCStoreAPI.Service.ProductImportService>();
     productService.RunProductsImportAsync().GetAwaiter().GetResult();
+}
+
+void SeedData()
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<DataSeeder>>();   
+    var seeders = new List<DataSeeder>
+    {
+        new ABCStoreAPI.Database.Seeder.FromCodeSeeder(dbContext, logger)
+    };
+
+    foreach (var seeder in seeders)
+    {
+        seeder.SeedAsync().GetAwaiter().GetResult();
+    }
 }

@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Product> Product { get; set; }
     public DbSet<ProductCategory> ProductCategory { get; set; }
     public DbSet<ProductImage> ProductImage { get; set; }
+    public DbSet<SupportedCurrency> SupportedCurrency { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
