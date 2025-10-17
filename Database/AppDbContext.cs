@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<ProductCategory> ProductCategory { get; set; }
     public DbSet<ProductImage> ProductImage { get; set; }
     public DbSet<SupportedCurrency> SupportedCurrency { get; set; }
+    public DbSet<ExchangeRate> ExchangeRate { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,5 +30,11 @@ public class AppDbContext : DbContext
         .WithMany(p => p.ProductImages)
         .HasForeignKey(pi => pi.ProductId)
         .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ExchangeRate>()
+            .HasOne(er => er.SupportedCurrency)
+            .WithMany()
+            .HasForeignKey(er => er.SupportedCurrencyId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

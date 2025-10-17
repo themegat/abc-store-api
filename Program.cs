@@ -1,5 +1,5 @@
 
-using ABCStoreAPI.Configurations;
+using ABCStoreAPI.Configuration;
 using ABCStoreAPI.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +16,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<ABCStoreAPI.Service.ProductImportService>();
+builder.Services.AddScoped<ABCStoreAPI.Service.ExchangeRateImportService>();
 
 var app = builder.Build();
 
@@ -28,6 +29,7 @@ if (app.Environment.IsDevelopment())
 }
 
 SeedData();
+LoadExchangeRates();
 LoadProducts();
 
 app.UseHttpsRedirection();
@@ -48,6 +50,13 @@ void LoadProducts()
     using var scope = app.Services.CreateScope();
     var productService = scope.ServiceProvider.GetRequiredService<ABCStoreAPI.Service.ProductImportService>();
     productService.RunProductsImportAsync().GetAwaiter().GetResult();
+}
+
+void LoadExchangeRates()
+{
+    using var scope = app.Services.CreateScope();
+    var exchangeRateService = scope.ServiceProvider.GetRequiredService<ABCStoreAPI.Service.ExchangeRateImportService>();
+    exchangeRateService.RunExchangeRateImportAsync().GetAwaiter().GetResult();
 }
 
 void SeedData()

@@ -1,4 +1,4 @@
-using ABCStoreAPI.Configurations;
+using ABCStoreAPI.Configuration;
 using ABCStoreAPI.Database;
 using ABCStoreAPI.Database.Model;
 using Microsoft.EntityFrameworkCore;

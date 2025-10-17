@@ -24,7 +24,7 @@ public class FromCodeSeeder : DataSeeder
                 new SupportedCurrency { Code = "JPY", Name = "Japanese Yen", Symbol = "¥", CreatedBy = SysUser, UpdatedBy = SysUser  },
                 new SupportedCurrency { Code = "AUD", Name = "Australian Dollar", Symbol = "A$", CreatedBy = SysUser, UpdatedBy = SysUser  },
                 new SupportedCurrency { Code = "ZAR", Name = "South African Rand", Symbol = "R", CreatedBy = SysUser, UpdatedBy = SysUser  },
-                new SupportedCurrency { Code = "WON", Name = "Korean Won", Symbol = "₩", CreatedBy = SysUser, UpdatedBy = SysUser },
+                new SupportedCurrency { Code = "KRW", Name = "Korean Won", Symbol = "₩", CreatedBy = SysUser, UpdatedBy = SysUser },
             };
 
         await _context.SupportedCurrency.AddRangeAsync(currencies);
