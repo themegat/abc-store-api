@@ -13,6 +13,7 @@ class DummyJsonProduct
     public string Description { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public int Stock { get; set; }
+    public string Category { get; set; } = string.Empty;
 }
 
 class DummyJsonProducts
@@ -28,8 +29,10 @@ public class ProductImportService
     private readonly string _productApiUrl;
     private readonly AppDbContext _dbContext;
 
-    private async Task<bool> IsExistingProduct(Product product) =>
-        await _dbContext.Products.FirstOrDefaultAsync(p => p.Name == product.Name) != null;
+    private async Task<bool> IsExistingProduct(string name) =>
+        await _dbContext.Product.FirstOrDefaultAsync(p => p.Name == name) != null;
+    private async Task<bool> IsExistingCategory(string name) =>
+       await _dbContext.ProductCategory.FirstOrDefaultAsync(p => p.Name == name) != null;
 
     public ProductImportService(HttpClient httpClient, IOptions<ApiConfig> apiConfig,
     AppDbContext dbContext, ILogger<ProductImportService> logger)
@@ -40,15 +43,50 @@ public class ProductImportService
         _logger = logger;
     }
 
-    public async Task ImportProductsAsync()
+    private async Task ImportProductCategories(DummyJsonProducts importProducts)
     {
-        var response = await _httpClient.GetAsync(_productApiUrl);
-        response.EnsureSuccessStatusCode();
-        string data = await response.Content.ReadAsStringAsync();
         int newCount = 0;
         int duplicateCount = 0;
 
-        DummyJsonProducts importProducts = JsonConvert.DeserializeObject<DummyJsonProducts>(data)!;
+        if (importProducts != null && importProducts.Products != null)
+        {
+            HashSet<string> categoryNames = new HashSet<string>();
+            foreach (var product in importProducts.Products)
+            {
+                categoryNames.Add(product.Category);
+            }
+
+            foreach (var categoryName in categoryNames)
+            {
+                if (!await IsExistingCategory(categoryName))
+                {
+                    var newCategory = new ProductCategory()
+                    {
+                        Name = categoryName
+                    };
+                    newCategory.CreatedAt = DateTime.UtcNow;
+                    newCategory.UpdatedAt = DateTime.UtcNow;
+                    newCategory.CreatedBy = SysUser;
+                    newCategory.UpdatedBy = SysUser;
+
+                    _dbContext.ProductCategory.Add(newCategory);
+                    newCount++;
+                }
+                else
+                {
+                    duplicateCount++;
+                }
+            }
+
+            await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("Added {Count} product categories. Skipped {Skipped} duplicate categories.", newCount, duplicateCount);
+        }
+    }
+
+    private async Task ImportProductsAsync(DummyJsonProducts importProducts)
+    {
+        int newCount = 0;
+        int duplicateCount = 0;
 
         if (importProducts != null && importProducts.Products != null)
         {
@@ -65,12 +103,18 @@ public class ProductImportService
                 newProduct.UpdatedAt = DateTime.UtcNow;
                 newProduct.CreatedBy = SysUser;
                 newProduct.UpdatedBy = SysUser;
-
-                if (!await IsExistingProduct(newProduct))
+                var category = await _dbContext.ProductCategory.FirstOrDefaultAsync(c => c.Name == product.Category);
+                if (category != null)
                 {
-                    _dbContext.Products.Add(newProduct);
+                    newProduct.ProductCategoryId = category.Id;
+                }
+
+                if (!await IsExistingProduct(newProduct.Name))
+                {
+                    _dbContext.Product.Add(newProduct);
                     newCount++;
-                }else
+                }
+                else
                 {
                     duplicateCount++;
                 }
@@ -79,5 +123,17 @@ public class ProductImportService
             await _dbContext.SaveChangesAsync();
             _logger.LogInformation("Added {Count} products. Skipped {Skipped} duplicate products.", newCount, duplicateCount);
         }
+    }
+
+    public async Task RunProductsImportAsync()
+    {
+        var response = await _httpClient.GetAsync(_productApiUrl);
+        response.EnsureSuccessStatusCode();
+        string data = await response.Content.ReadAsStringAsync();
+
+        DummyJsonProducts importProducts = JsonConvert.DeserializeObject<DummyJsonProducts>(data)!;
+
+        await ImportProductCategories(importProducts);
+        await ImportProductsAsync(importProducts);
     }
 }

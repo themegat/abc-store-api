@@ -45,5 +45,5 @@ void LoadProducts()
 {
     using var scope = app.Services.CreateScope();
     var productService = scope.ServiceProvider.GetRequiredService<ABCStoreAPI.Service.ProductImportService>();
-    productService.ImportProductsAsync().GetAwaiter().GetResult();
+    productService.RunProductsImportAsync().GetAwaiter().GetResult();
 }
