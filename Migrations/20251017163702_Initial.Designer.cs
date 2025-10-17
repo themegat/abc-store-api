@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ABCStoreAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251017152027_Initial")]
+    [Migration("20251017163702_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -63,7 +63,7 @@ namespace ABCStoreAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products");
+                    b.ToTable("Product");
                 });
 #pragma warning restore 612, 618
         }
