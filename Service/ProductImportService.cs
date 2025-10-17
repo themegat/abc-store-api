@@ -1,5 +1,6 @@
 using ABCStoreAPI.Configurations;
 using ABCStoreAPI.Model;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
@@ -27,6 +28,9 @@ public class ProductImportService
     private readonly string _productApiUrl;
     private readonly AppDbContext _dbContext;
 
+    private async Task<bool> IsExistingProduct(Product product) =>
+        await _dbContext.Products.FirstOrDefaultAsync(p => p.Name == product.Name) != null;
+
     public ProductImportService(HttpClient httpClient, IOptions<ApiConfig> apiConfig,
     AppDbContext dbContext, ILogger<ProductImportService> logger)
     {
@@ -41,6 +45,8 @@ public class ProductImportService
         var response = await _httpClient.GetAsync(_productApiUrl);
         response.EnsureSuccessStatusCode();
         string data = await response.Content.ReadAsStringAsync();
+        int newCount = 0;
+        int duplicateCount = 0;
 
         DummyJsonProducts importProducts = JsonConvert.DeserializeObject<DummyJsonProducts>(data)!;
 
@@ -59,11 +65,19 @@ public class ProductImportService
                 newProduct.UpdatedAt = DateTime.UtcNow;
                 newProduct.CreatedBy = SysUser;
                 newProduct.UpdatedBy = SysUser;
-                _dbContext.Products.Add(newProduct);
+
+                if (!await IsExistingProduct(newProduct))
+                {
+                    _dbContext.Products.Add(newProduct);
+                    newCount++;
+                }else
+                {
+                    duplicateCount++;
+                }
             }
 
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("Imported {Count} products.", importProducts.Products.Count);
+            _logger.LogInformation("Added {Count} products. Skipped {Skipped} duplicate products.", newCount, duplicateCount);
         }
     }
 }
