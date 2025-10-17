@@ -1,7 +1,7 @@
-using ABCStoreAPI.Model;
-using Microsoft.EntityFrameworkCore;
+namespace ABCStoreAPI.Database;
 
-namespace ABCStoreAPI;
+using ABCStoreAPI.Database.Model;
+using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
 {

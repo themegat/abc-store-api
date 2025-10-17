@@ -1,4 +1,4 @@
-namespace ABCStoreAPI.Model;
+namespace ABCStoreAPI.Database.Model;
 
 public class ProductImage : BaseEntity
 {

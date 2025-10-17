@@ -1,5 +1,6 @@
 using ABCStoreAPI.Configurations;
-using ABCStoreAPI.Model;
+using ABCStoreAPI.Database;
+using ABCStoreAPI.Database.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
