@@ -20,7 +20,11 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IExchangeRateRepository, ExchangeRateRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
+
 builder.Services.AddScoped<ABCStoreAPI.Service.ExchangeRateService>();
+builder.Services.AddScoped<ABCStoreAPI.Service.ProductService>();
 
 builder.Services.AddScoped<ABCStoreAPI.Service.ProductImportService>();
 builder.Services.AddScoped<ABCStoreAPI.Service.ExchangeRateImportService>();

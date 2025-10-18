@@ -21,4 +21,19 @@ public class ExchangeRateService
 
         return exchangeRates.Select(DataTransfer.ExchangeRateDto.toDto).ToList();
     }
+
+    public async Task<DataTransfer.ExchangeRateDto?> GetExchangeRateByCurrencyCodeAsync(string currencyCode)
+    {
+        var exchangeRate = await _uow.ExchangeRates
+        .GetByCurrency(currencyCode)
+        .Include(e => e.SupportedCurrency)
+        .FirstOrDefaultAsync();
+
+        if (exchangeRate == null)
+        {
+            return null;
+        }
+
+        return DataTransfer.ExchangeRateDto.toDto(exchangeRate);
+    }
 }
